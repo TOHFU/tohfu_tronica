@@ -39,7 +39,7 @@
 
     void main() {
       vUv = uv; // 頂点ごとのuv座標を定義
-      gl_Position = vec4(position, 1.0);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   </script>
   <!-- /vertex shaderをここに記述 -->

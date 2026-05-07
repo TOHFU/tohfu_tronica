@@ -9,6 +9,9 @@ async function init() {
   let texture;
   let renderTarget, renderTargetSwap;
   let gameScene, gameMesh;
+  let displayMesh;
+  let geometries;
+  const pressedKeys = new Set();
   // ゲーム状態バッファ／テクスチャ
   let gameStateTexture = null;
   let gameStateData = null;
@@ -54,8 +57,9 @@ async function init() {
     magFilter: THREE.NearestFilter
   });
 
-  // 板ポリゴンのメッシュをシーンに追加
-  scene.add(createPlaneMesh());
+  // 表示用メッシュをシーンに追加
+  displayMesh = createDisplayMesh();
+  scene.add(displayMesh);
 
   // ゲーム計算用メッシュを作成
   gameMesh = createGameMesh();
@@ -72,6 +76,11 @@ async function init() {
     document.addEventListener('touchmove', onPointerMove, true);
     document.addEventListener('mousemove', onPointerMove, true);
   }
+
+  // キー押下中はジオメトリを切り替える
+  document.addEventListener('keydown', onKeyDown, true);
+  document.addEventListener('keyup', onKeyUp, true);
+  window.addEventListener('blur', onWindowBlur, false);
 
   // マウスダウン／アップイベント（mousedown の状態をシェーダに渡す）
   function setMouseDownState(down) {
@@ -96,22 +105,30 @@ async function init() {
   btn.addEventListener('click', () => {
     if (isPlaying) {
       isPlaying = false;
-      cancelAnimationFrame(animationId);
+      clearKeyboardControlState();
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = undefined;
+      }
       btn.textContent = 'play movie >>>';
     } else {
       isPlaying = true;
-      animate(performance.now());
+      requestAnimationIfNeeded();
       btn.textContent = 'pause movie |||';
     }
   });
 
   // アニメーション
-  animate();
+  requestAnimationIfNeeded();
 
   // 一定時間レンダー後に停止
   setTimeout(() => {
     isPlaying = false;
-    cancelAnimationFrame(animationId);
+    clearKeyboardControlState();
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = undefined;
+    }
   }, 100);
 
   /**
@@ -138,10 +155,7 @@ async function init() {
    *
    * @return {Object} メッシュオブジェクト
    */
-  function createPlaneMesh() {
-    // 2x2の板ポリゴンを作成
-    const geometry = new THREE.PlaneBufferGeometry(2, 2);
-
+  function createDisplayMesh() {
     // uniform変数を定義
     // ここで定義した変数が、shader内で利用できます
     uniforms = {
@@ -163,8 +177,100 @@ async function init() {
     });
     material.extensions.derivatives = true;
 
+    geometries = {
+      default: new THREE.PlaneBufferGeometry(2, 2),
+      cube: new THREE.BoxGeometry(1.5, 1.5, 1.5),
+      cone: new THREE.ConeGeometry(1.0, 1.8, 48),
+      sphere: new THREE.SphereGeometry(1.1, 48, 32),
+      torus: new THREE.TorusGeometry(0.75, 0.3, 24, 64)
+    };
+
     // メッシュを作成
-    return new THREE.Mesh(geometry, material);
+    return new THREE.Mesh(geometries.default, material);
+  }
+
+  function getGeometryNameFromPressedKeys() {
+    if (pressedKeys.has('KeyS')) return 'cube';
+    if (pressedKeys.has('KeyD')) return 'cone';
+    if (pressedKeys.has('KeyF')) return 'sphere';
+    if (pressedKeys.has('KeyG')) return 'torus';
+    return 'default';
+  }
+
+  function updateDisplayGeometry() {
+    if (!displayMesh || !geometries) return;
+
+    const nextGeometryName = getGeometryNameFromPressedKeys();
+    const nextGeometry = geometries[nextGeometryName];
+
+    if (nextGeometry && displayMesh.geometry !== nextGeometry) {
+      displayMesh.geometry = nextGeometry;
+      render(performance.now());
+    }
+  }
+
+  function onKeyDown(event) {
+    if (!isPlaying) return;
+
+    const code = event.code;
+    if (code === 'KeyS' || code === 'KeyD' || code === 'KeyF' || code === 'KeyG') {
+      pressedKeys.add(code);
+      updateDisplayGeometry();
+      requestAnimationIfNeeded();
+    }
+  }
+
+  function onKeyUp(event) {
+    if (!isPlaying) return;
+
+    const code = event.code;
+    if (code === 'KeyS' || code === 'KeyD' || code === 'KeyF' || code === 'KeyG') {
+      pressedKeys.delete(code);
+      updateDisplayGeometry();
+      requestAnimationIfNeeded();
+    }
+  }
+
+  function onWindowBlur() {
+    if (pressedKeys.size > 0) {
+      pressedKeys.clear();
+      updateDisplayGeometry();
+      requestAnimationIfNeeded();
+    }
+  }
+
+  function clearKeyboardControlState() {
+    if (pressedKeys.size > 0) {
+      pressedKeys.clear();
+    }
+    updateDisplayGeometry();
+    if (displayMesh) {
+      displayMesh.rotation.set(0, 0, 0);
+    }
+    render(performance.now());
+  }
+
+  function shouldAnimateFrame() {
+    return isPlaying || pressedKeys.size > 0;
+  }
+
+  function requestAnimationIfNeeded() {
+    if (!animationId) {
+      animationId = requestAnimationFrame(animate);
+    }
+  }
+
+  function updateDisplayRotation(delta) {
+    if (!displayMesh) return;
+
+    if (pressedKeys.size > 0) {
+      const t = delta * 0.001;
+      displayMesh.rotation.x = t * 1.1;
+      displayMesh.rotation.y = t * 1.4;
+      displayMesh.rotation.z = t * 0.9;
+    } else {
+      displayMesh.rotation.set(0, 0, 0);
+    }
   }
 
   /**
@@ -373,9 +479,11 @@ async function init() {
    * @param delta
    */
   function animate(delta) {
-    if (isPlaying) {
-      animationId = requestAnimationFrame(animate);
-      render(delta);
+    animationId = undefined;
+    render(delta);
+
+    if (shouldAnimateFrame()) {
+      requestAnimationIfNeeded();
     }
   }
 
@@ -386,7 +494,10 @@ async function init() {
    */
   function render(delta) {
     uniforms.u_time.value = delta;
+    updateDisplayRotation(delta);
     renderer.render( scene, camera );
   }
+
+  console.log('Hit PLAY to start the VJ show!! Hold these keys to trigger geometries:[S] Cube | [D] Cone | [F] Sphere | [G] Torus (Donut) Enjoy!! 😃')
 
 };
