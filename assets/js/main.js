@@ -189,6 +189,9 @@ async function init() {
     return new THREE.Mesh(geometries.default, material);
   }
 
+  /**
+   * 押されているキーに応じてジオメトリ名を取得
+   */
   function getGeometryNameFromPressedKeys() {
     if (pressedKeys.has('KeyS')) return 'cube';
     if (pressedKeys.has('KeyD')) return 'cone';
@@ -197,6 +200,9 @@ async function init() {
     return 'default';
   }
 
+  /**
+   * 押されているキーに応じて表示用メッシュのジオメトリを更新
+   */
   function updateDisplayGeometry() {
     if (!displayMesh || !geometries) return;
 
@@ -239,6 +245,9 @@ async function init() {
     }
   }
 
+  /**
+   * キーボードコントロールの状態をリセット（全てのキーを離した状態にする）
+   */
   function clearKeyboardControlState() {
     if (pressedKeys.size > 0) {
       pressedKeys.clear();
@@ -250,16 +259,25 @@ async function init() {
     render(performance.now());
   }
 
+  /**
+   * アニメーションを続行する必要があるか
+   */
   function shouldAnimateFrame() {
     return isPlaying || pressedKeys.size > 0;
   }
 
+  /**
+   * アニメーションフレームのリクエスト（必要な場合のみ）
+   */
   function requestAnimationIfNeeded() {
     if (!animationId) {
       animationId = requestAnimationFrame(animate);
     }
   }
 
+  /**
+   * 表示用メッシュの回転を更新
+   */
   function updateDisplayRotation(delta) {
     if (!displayMesh) return;
 
@@ -275,8 +293,6 @@ async function init() {
 
   /**
    * ゲーム計算用メッシュを作成
-   *
-   * @return {Object} メッシュオブジェクト
    */
   function createGameMesh() {
     const geometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -448,8 +464,6 @@ async function init() {
 
   /**
    * 画面のリサイズ
-   *
-   * @param event
    */
   function onWindowResize(event) {
     // リサイズ
@@ -463,8 +477,6 @@ async function init() {
 
   /**
    * マウスポインタ一の取得(画面左下が原点)
-   *
-   * @param event
    */
   function onPointerMove(event) {
     // uniform変数のマウスポインタ情報を更新
@@ -475,8 +487,6 @@ async function init() {
 
   /**
    * アニメーション
-   *
-   * @param delta
    */
   function animate(delta) {
     animationId = undefined;
@@ -489,8 +499,6 @@ async function init() {
 
   /**
    * 描画
-   *
-   * @param delta
    */
   function render(delta) {
     uniforms.u_time.value = delta;
@@ -498,6 +506,7 @@ async function init() {
     renderer.render( scene, camera );
   }
 
-  console.log('Hit PLAY to start the VJ show!! Hold these keys to trigger geometries:[S] Cube | [D] Cone | [F] Sphere | [G] Torus (Donut) Enjoy!! 😃')
+  // MESSAGE
+  (function(_0x1b2c){console.log(decodeURIComponent(escape(atob(_0x1b2c))))})("SGl0IFBMQVkgdG8gc3RhcnQgdGhlIFZKIHNob3chISBIb2xkIHRoZXNlIGtleXMgdG8gdHJpZ2dlciBnZW9tZXRyaWVzOltTXSBDdWJlIHwgW0RdIENvbmUgfCBbRl0gU3BoZXJlIHwgW0ddIFRvcnVzIChEb251dCkgRW5qb3khISDwn5mD");
 
 };
