@@ -1,0 +1,235 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>tohfu_tronica - Interaction Design / UI / Art / Prototyping /IoT</title>
+  <meta name="description" content="tohfu_tronica website" />
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="tohfu_tronica - Interaction Design / UI / Art / Prototyping /IoT">
+  <meta property="og:url" content="https://tohfu-tronica.netlify.app/">
+  <meta property="og:site_name" content="tohfu_tronica - Interaction Design / UI / Art / Prototyping /IoT">
+  <meta property="og:locale" content="ja">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="tohfu_tronica - Interaction Design / UI / Art / Prototyping /IoT">
+  <link rel="icon" type="image/png" href="https://tohfu-tronica.netlify.app/assets/img/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="./assets/css/styles.css">
+</head>
+
+<body>
+  <div id="container">
+    <button class="btn" id="playPauseBtn" aria-label="Play or pause the animation">play movie >>></button>
+    <h1 class="title">tohfu_tronica</h1>
+    <h2 class="profile">Interaction Design / UI / Art / Prototyping /IoT</h2>
+    <ul class="links">
+      <li class="links__item"><a href="https://note.com/tohfu_tronica" rel="noreferrer" target="_blank">note</a></li>
+      <li class="links__item"><a href="https://github.com/tohfu" rel="noreferrer" target="_blank">github</a></li>
+            <li class="links__item"><a href="https://mitamamma-blog.tumblr.com/" rel="noreferrer" target="_blank">tumblr (past)</a></li>
+      <li class="links__item"><a href="https://tohfu.github.io/" rel="noreferrer" target="_blank">blog (past)</a></li>
+    </ul>
+  </div>
+
+  <!-- vertex shaderをここに記述 -->
+  <script id="vertexShader" type="x-shader/x-vertex">
+    varying vec2 vUv; // fragment shaderに渡すための変数を定義
+
+    void main() {
+      vUv = uv; // 頂点ごとのuv座標を定義
+      gl_Position = vec4(position, 1.0);
+    }
+  </script>
+  <!-- /vertex shaderをここに記述 -->
+
+  <!-- fragment shaderをここに記述 -->
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    varying vec2 vUv;          // テクスチャ座標(vertex shaderから)
+
+    uniform vec2 u_resolution; // 画面の解像度
+    uniform sampler2D u_tex;   // テクスチャ
+    uniform vec2 u_texsize;    // テクスチャのサイズ
+    uniform vec2 u_mouse;      // マウス座標
+    uniform sampler2D u_gameState; // ゲーム状態テクスチャ
+    uniform float u_time;
+    uniform float u_mouseDown;
+
+    /**
+     * vUvのテクスチャ座標をリサイズ(cover相当)に変換
+     *
+     * @param (res_size) 画面のサイズ
+     * @param (tex_size) テクスチャのサイズ
+     * @param vUvをリサイズした座標
+     */
+    vec2 coverd_texture(vec2 res_size, vec2 tex_size) {
+
+      float aspect_tex = tex_size.x / tex_size.y; // テクスチャのアスペクト比
+      float aspect_res = res_size.x / res_size.y; // 画面領域のアスペクト比
+      float ratio = aspect_res / aspect_tex;      // アスペクト比の比率
+
+      vec2 aspect = vec2( // 拡大率の計算(ここをmaxにしたらcontainっぽくなりますね)
+        min(ratio, 1.0),
+        min(1.0/ratio, 1.0)
+      );
+
+      return vec2( // リサイズ＋センタリング
+        vUv.x * aspect.x + (1.0 - aspect.x) * 0.5,
+        vUv.y * aspect.y + (1.0 - aspect.y) * 0.5
+      );
+
+    }
+
+    // フラグメントシェーダの精度指定
+    precision mediump float;
+
+    // Glitch用乱数生成
+    float rand(vec2 co) {
+      return fract(sin(dot(co, vec2(12.9898,78.233))) * 43758.5453);
+    }
+
+    // Glitchエフェクトの適用
+    vec3 applyGlitch(vec2 uvIn, vec2 resUv) {
+      vec3 base = texture2D(u_tex, uvIn).rgb;
+
+      float bands = 6.0;
+      float bandId = floor(resUv.y * bands);
+      float bandNoise = rand(vec2(bandId, floor(u_time * 8.0)));
+      float bandTrigger = step(0.7, bandNoise);
+      float maxShift = 0.8 * bandNoise;
+      float shift = (rand(vec2(bandId, u_time)) - 0.5) * maxShift * bandTrigger;
+
+      vec2 uvR = clamp(uvIn + vec2(shift, 0.0), 0.0, 1.0);
+      vec2 uvG = clamp(uvIn + vec2(shift * 0.6, 0.0), 0.0, 1.0);
+      vec2 uvB = clamp(uvIn + vec2(shift * 0.3, 0.0), 0.0, 1.0);
+
+      vec3 cR = texture2D(u_tex, uvR).rgb;
+      vec3 cG = texture2D(u_tex, uvG).rgb;
+      vec3 cB = texture2D(u_tex, uvB).rgb;
+
+      vec3 rgbShift = vec3(cR.r, cG.g, cB.b);
+
+      float blockNoise = rand(vec2(floor(u_time * 5.0), floor(resUv.x * 8.0)));
+      if(blockNoise > 0.5) {
+        vec2 blockOffset = vec2(rand(vec2(u_time, resUv.x)) - 0.5, rand(vec2(resUv.y, u_time)) - 0.5) * 0.25;
+        vec3 blockColor = texture2D(u_tex, clamp(uvIn + blockOffset, 0.0, 1.0)).rgb;
+        rgbShift = mix(rgbShift, blockColor, 0.6);
+      }
+
+      float gStrength = smoothstep(0.0, 1.0, bandNoise) * 0.9;
+      return mix(base, rgbShift, gStrength);
+    }
+
+    void main() {
+
+      // リサイズ
+      vec2 uv = coverd_texture(u_resolution, u_texsize);
+
+      // 歪曲エフェクト
+      float distortion = 1.0 - max(max(abs(u_mouse.x), abs(u_mouse.y)),u_mouseDown);
+      vec2 effect_origin = vec2(0.6, 0.5);
+      uv -= effect_origin;
+      uv *= vec2(pow(length(uv), distortion));
+      uv += effect_origin;
+
+      // クリップ処理（歪曲後の座標がはみ出さないようにする）
+      if(uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        return;
+      }
+
+      // ゲーム状態をサンプリング
+      vec2 gameUv = uv;
+      vec4 gameSample = texture2D(u_gameState, gameUv);
+      float gameState = gameSample.r;
+
+      // セルの状態を表示（白=生存、黒=死滅）
+      vec3 gameColor = mix(vec3(0.0), vec3(1.0), gameState);
+
+      // 元画像をサンプリング（グリッチ適用）
+      vec3 texColor = applyGlitch(uv, vUv);
+
+      // マウスダウン時は texColor の「青色のみ」を出力
+      if(u_mouseDown > 0.5) {
+        gl_FragColor = vec4(vec3(texColor.b), 1.0);
+        return;
+      }
+
+      // 通常時はゲーム画面と元画像を加算
+      vec3 finalColor = gameColor + texColor;
+      gl_FragColor = vec4(finalColor, 1.0);
+    }
+  </script>
+  <!-- /fragment shaderをここに記述 -->
+
+  <!-- ゲーム計算用fragment shader -->
+  <script id="gameShader" type="x-shader/x-fragment">
+    varying vec2 vUv;
+
+    uniform sampler2D u_gameState;
+    uniform vec2 u_texsize;
+
+    /**
+     * 周囲のセルの数をカウント
+     */
+    float countNeighbors(vec2 uv, vec2 texelSize) {
+      float count = 0.0;
+
+      for(int x = -1; x <= 1; x++) {
+        for(int y = -1; y <= 1; y++) {
+          if(x == 0 && y == 0) continue;
+
+          vec2 neighborUv = uv + vec2(float(x), float(y)) * texelSize;
+          float neighbor = texture2D(u_gameState, neighborUv).r;
+          count += neighbor;
+        }
+      }
+
+      return count;
+    }
+
+    void main() {
+      vec2 texelSize = 1.0 / u_texsize;
+      float currentCell = texture2D(u_gameState, vUv).r;
+      float neighbors = countNeighbors(vUv, texelSize);
+
+      // ライフゲームのルール適用
+      float nextState = 0.0;
+      
+      if(currentCell > 0.5) {
+        // 生きているセル：2個または3個の隣接セルがいれば生存
+        if(neighbors == 2.0 || neighbors == 3.0) {
+          nextState = 1.0;
+        }
+      } else {
+        // 死んでいるセル：3個の隣接セルがいれば生成
+        if(neighbors == 3.0) {
+          nextState = 1.0;
+        }
+      }
+
+      gl_FragColor = vec4(nextState, 0.0, 0.0, 1.0);
+    }
+  </script>
+  <!-- /ゲーム計算用fragment shader -->
+
+  <!-- 初期化用fragment shader（エッジ検出） -->
+  <script id="initShader" type="x-shader/x-fragment">
+    varying vec2 vUv;
+
+    uniform sampler2D u_tex;
+    uniform vec2 u_texsize;
+
+    void main() {
+      // デバッグ用：常に白を返す
+      gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+    }
+  </script>
+  <!-- /初期化用fragment shader -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/98/three.min.js"></script>
+  <script src="./assets/js/main.js"></script>
+</body>
+
+</html>
