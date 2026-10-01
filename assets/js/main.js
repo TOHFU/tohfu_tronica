@@ -24,6 +24,10 @@ const SPEED_JITTER = 0.6; // 速度のランダムな個体差（0〜1の割合�
 const FONT_SIZE_MAX_MULTIPLIER = 8; // フォントサイズの最大倍率（1倍〜この倍率でランダム）
 const FADE_IN_DURATION = 0.6; // ローディング完了後、テキストがフェードインする秒数
 
+// マウス追従のカメラ挙動
+const CAMERA_PIVOT_Z = -4; // 注視点（回転の中心）をZ方向の奥へずらし、中心がずれているように感じさせる
+const POINTER_FOLLOW_SECONDS = 0.3; // マウスの動きに追いつくまでの時間定数（秒）
+
 async function init() {
 
   const container = document.getElementById('container');
@@ -297,11 +301,12 @@ async function init() {
     const delta = lastTime ? Math.min(time - lastTime, 0.1) : 0;
     lastTime = time;
 
-    pointer.lerp(targetPointer, 0.08);
+    // フレームレートに依存しない指数平滑化。約0.3秒かけて滑らかに追従する
+    pointer.lerp(targetPointer, 1 - Math.exp(-delta / POINTER_FOLLOW_SECONDS));
 
     camera.position.x = pointer.x * 3;
     camera.position.y = pointer.y * 3;
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0, 0, CAMERA_PIVOT_Z);
 
     updateFlow(delta);
     updateFadeIn(delta);
