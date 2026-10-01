@@ -35,6 +35,7 @@ async function init() {
   let camera, scene, renderer;
   let raycaster, pointer;
   let hovered = null;
+  let overLink = false;
   let lastTime = 0;
   let fadeInElapsed = 0;
   let fadingIn = false;
@@ -223,6 +224,7 @@ async function init() {
    * マウス／タッチ座標を正規化デバイス座標(-1〜1)で保持
    */
   function onPointerMove(event) {
+    overLink = !!(event.target.closest && event.target.closest('a'));
     targetPointer.x = (event.clientX / window.innerWidth) * 2 - 1;
     targetPointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
@@ -230,7 +232,8 @@ async function init() {
   /**
    * テキストをクリックしたら対応するページへ遷移
    */
-  function onClick() {
+  function onClick(event) {
+    if (event.target.closest && event.target.closest('a')) return;
     if (hovered) {
       window.open(hovered.userData.url, '_blank', 'noopener,noreferrer');
     }
@@ -242,7 +245,7 @@ async function init() {
   function updateHover() {
     raycaster.setFromCamera(pointer, camera);
     const intersections = raycaster.intersectObjects(items, true);
-    const next = intersections.length > 0 ? intersections[0].object.parent : null;
+    const next = !overLink && intersections.length > 0 ? intersections[0].object.parent : null;
 
     if (next !== hovered) {
       if (hovered) {
