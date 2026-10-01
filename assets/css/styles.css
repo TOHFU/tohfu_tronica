@@ -3,13 +3,23 @@
 
 html, body {
     margin: 0;
-    font-family: "Lato", sans-serif;
+    font-family: "Noto Sans JP", sans-serif;
 }
 
 #container {
     width: 100vw;
     position: fixed;
     cursor: crosshair;
+    background-color: #eee;
+    background-image:
+        radial-gradient(at 15% 20%, #fbfbfb 0px, transparent 55%),
+        radial-gradient(at 85% 15%, #d8d8d8 0px, transparent 55%),
+        radial-gradient(at 20% 85%, #e4e4e4 0px, transparent 55%),
+        radial-gradient(at 80% 80%, #cfcfcf 0px, transparent 55%),
+        radial-gradient(at 50% 50%, #f5f5f5 0px, transparent 60%);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
     &::before {
         content: '';
         position: absolute;
@@ -60,13 +70,30 @@ html, body {
     display: inline-block;
 }
 
-.btn {
-    padding: 1px 10px;
+.loading {
     position: absolute;
-    top: 220px; left: 30px;
-    color: #000;
-    background-color: #fff;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+}
+
+.loading--hidden {
+    opacity: 0;
+}
+
+.loading__spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #ccc;
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: loading-spin 0.8s linear infinite;
+}
+
+@keyframes loading-spin {
+    to { transform: rotate(360deg); }
 }

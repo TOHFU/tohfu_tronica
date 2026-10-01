@@ -1,512 +1,313 @@
 document.addEventListener('DOMContentLoaded', init);
 
+const ITEMS_URL = 'data/items.json';
+
+const FALLBACK_ITEMS = [
+  { text: 'note', url: 'https://note.com/tohfu_tronica' },
+  { text: 'github', url: 'https://github.com/TOHFU' },
+];
+
+// テキストが流れる範囲（下から上へループ）
+const FLOW_BOTTOM = -13;
+const FLOW_TOP = 13;
+const FLOW_X_RANGE = 12;
+const FLOW_Z = 0;
+const FLOW_BASE_SPEED = 1.1;
+
+// テキストを整列させる縦レーンの数と、レーン内での縦の間隔
+const LANE_COUNT = 14;
+const ITEM_GAP = 3.2;
+const ITEM_GAP_JITTER = 1.6; // レーン内の間隔にランダムな揺らぎを持たせる
+const LANE_X_JITTER = 0.6; // レーン内でのX位置のランダムなブレ
+const ITEM_Z_JITTER = 1.5; // アイテム同士が同じZ座標で重なりちらつくのを防ぐランダムなZブレ
+const SPEED_JITTER = 0.6; // 速度のランダムな個体差（0〜1の割合）
+const FONT_SIZE_MAX_MULTIPLIER = 8; // フォントサイズの最大倍率（1倍〜この倍率でランダム）
+const FADE_IN_DURATION = 0.6; // ローディング完了後、テキストがフェードインする秒数
+
 async function init() {
 
   const container = document.getElementById('container');
 
   let camera, scene, renderer;
-  let uniforms, gameUniforms;
-  let texture;
-  let renderTarget, renderTargetSwap;
-  let gameScene, gameMesh;
-  let displayMesh;
-  let geometries;
-  const pressedKeys = new Set();
-  // ゲーム状態バッファ／テクスチャ
-  let gameStateTexture = null;
-  let gameStateData = null;
-  let gameStateNextData = null;
-  let gameStateWidth = 0;
-  let gameStateHeight = 0;
+  let raycaster, pointer;
+  let hovered = null;
+  let lastTime = 0;
+  let fadeInElapsed = 0;
+  let fadingIn = false;
+  const items = [];
 
-  let isPlaying = true;
-  let animationId;
+  // near/farをテキストが実際に存在する距離帯に絞り、深度バッファの精度を上げて
+  // 重なったポリゴン同士のちらつき（深度精度不足によるz-fighting）を抑える
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 5, 25);
+  camera.position.z = 12;
 
-  // テクスチャの読み込み
-  await loadTexture(`./assets/img/mainvisual_${Math.floor(Math.random()*5+1)}.jpg`);
-
-  // カメラを作成
-  camera = new THREE.Camera();
-  camera.position.z = 1;
-
-  // シーンを作成
   scene = new THREE.Scene();
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.8);
+  keyLight.position.set(3, 6, 8);
+  scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  fillLight.position.set(-4, -2, 6);
+  scene.add(fillLight);
 
-  // ゲーム計算用のシーンを作成
-  gameScene = new THREE.Scene();
-
-  // レンダラーを作成
-  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setClearColor(0x000000, 1);
+  renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
 
-  // RenderTargetを作成（ライフゲーム状態を保存）
-  const rtWidth = Math.floor(texture.image.width / 8); // cellSize = 8
-  const rtHeight = Math.floor(texture.image.height / 8);
-  renderTarget = new THREE.WebGLRenderTarget(rtWidth, rtHeight, {
-    format: THREE.RGBAFormat,
-    type: THREE.UnsignedByteType,
-    minFilter: THREE.NearestFilter,
-    magFilter: THREE.NearestFilter
-  });
-  renderTargetSwap = new THREE.WebGLRenderTarget(rtWidth, rtHeight, {
-    format: THREE.RGBAFormat,
-    type: THREE.UnsignedByteType,
-    minFilter: THREE.NearestFilter,
-    magFilter: THREE.NearestFilter
-  });
+  raycaster = new THREE.Raycaster();
+  pointer = new THREE.Vector2(0, 0);
+  const targetPointer = new THREE.Vector2(0, 0);
 
-  // 表示用メッシュをシーンに追加
-  displayMesh = createDisplayMesh();
-  scene.add(displayMesh);
-
-  // ゲーム計算用メッシュを作成
-  gameMesh = createGameMesh();
-  gameScene.add(gameMesh);
-
-  // リサイズイベント
   onWindowResize();
   window.addEventListener('resize', onWindowResize, false);
 
-  // マウス移動イベント
   if (window.PointerEvent) {
     document.addEventListener('pointermove', onPointerMove, true);
   } else {
     document.addEventListener('touchmove', onPointerMove, true);
     document.addEventListener('mousemove', onPointerMove, true);
   }
+  document.addEventListener('click', onClick, true);
 
-  // キー押下中はジオメトリを切り替える
-  document.addEventListener('keydown', onKeyDown, true);
-  document.addEventListener('keyup', onKeyUp, true);
-  window.addEventListener('blur', onWindowBlur, false);
+  loadItems();
 
-  // マウスダウン／アップイベント（mousedown の状態をシェーダに渡す）
-  function setMouseDownState(down) {
-    if (uniforms && uniforms.u_mouseDown) uniforms.u_mouseDown.value = down ? 1.0 : 0.0;
-    render(performance.now());
-  }
-  document.querySelectorAll('a').forEach(link => {
-    link.addEventListener('mouseover', () => setMouseDownState(true), true);
-    link.addEventListener('mouseout', () => setMouseDownState(false), true);
-  });
-
-  // 0.5秒ごとにゲーム世代を進める
-  setInterval(() => {
-    updateGameOfLife();
-  }, 50);
-
-  // 初期化：エッジデータをゲーム状態テクスチャに保存
-  initializeGameState();
-
-  // ボタンのイベントリスナー
-  const btn = document.getElementById('playPauseBtn');
-  btn.addEventListener('click', () => {
-    if (isPlaying) {
-      isPlaying = false;
-      clearKeyboardControlState();
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-        animationId = undefined;
-      }
-      btn.textContent = 'play movie >>>';
-    } else {
-      isPlaying = true;
-      requestAnimationIfNeeded();
-      btn.textContent = 'pause movie |||';
-    }
-  });
-
-  // アニメーション
-  requestAnimationIfNeeded();
-
-  // 一定時間レンダー後に停止
-  setTimeout(() => {
-    isPlaying = false;
-    clearKeyboardControlState();
-    if (animationId) {
-      cancelAnimationFrame(animationId);
-      animationId = undefined;
-    }
-  }, 100);
+  requestAnimationFrame(animate);
 
   /**
-   * テクスチャの読み込み
-   *
-   * @param {string} imagePath 画像のパス
+   * データ取得（githubリポジトリ + note記事）、失敗してもフェイルソフト
    */
-  function loadTexture(imagePath) {
-    return new Promise(resolve => {
-      const loader = new THREE.TextureLoader();
-      loader.setCrossOrigin("anonymous");
-      loader.load(imagePath, (tex) => {
-          texture = tex;
-          texture.wrapS = THREE.RepeatWrapping;
-          texture.wrapT = THREE.RepeatWrapping;
-          texture.minFilter = THREE.LinearFilter;
-          resolve();
-      });
-    });
-  }
+  async function loadItems() {
+    const fetched = shuffle(await fetchItems().catch(() => []));
+    const source = fetched.length > 0 ? fetched : FALLBACK_ITEMS;
 
-  /**
-   * 板ポリゴンを作成
-   *
-   * @return {Object} メッシュオブジェクト
-   */
-  function createDisplayMesh() {
-    // uniform変数を定義
-    // ここで定義した変数が、shader内で利用できます
-    uniforms = {
-      u_time       : { type : "f" , value : 0.0 },                        // 時間
-      u_resolution : { type : "v2", value : new THREE.Vector2() },        // 画面の解像度
-      u_tex        : { type : "t",  value : texture },                    // テクスチャ
-      u_texsize    : { type : "v2", value : new THREE.Vector2(texture.image.width, texture.image.height)}, // テクスチャのサイズ
-      u_mouse      : { type : "v2", value : new THREE.Vector2() },        // マウス座標
-      u_mouseDown  : { type : "f",  value : 0.0 },                        // マウスダウンフラグ
-      u_gameState  : { type : "t",  value : renderTarget.texture }        // ゲーム状態テクスチャ
-    };
+    const laneSlotCount = Math.ceil(source.length / LANE_COUNT);
+    const laneLoopLength = Math.max(laneSlotCount, 1) * ITEM_GAP;
 
-    // 板ポリに貼り付けるマテリアルを作成
-    // shaderを利用するときは、ShaderMaterialを使う
-    const material = new THREE.ShaderMaterial({
-      uniforms       : uniforms,
-      vertexShader   : document.getElementById('vertexShader').textContent,  // vertex shaderの指定
-      fragmentShader : document.getElementById('fragmentShader').textContent // fragment shaderの指定
-    });
-    material.extensions.derivatives = true;
-
-    geometries = {
-      default: new THREE.PlaneBufferGeometry(2, 2),
-      cube: new THREE.BoxGeometry(1.5, 1.5, 1.5),
-      cone: new THREE.ConeGeometry(1.0, 1.8, 48),
-      sphere: new THREE.SphereGeometry(1.1, 48, 32),
-      torus: new THREE.TorusGeometry(0.75, 0.3, 24, 64)
-    };
-
-    // メッシュを作成
-    return new THREE.Mesh(geometries.default, material);
-  }
-
-  /**
-   * 押されているキーに応じてジオメトリ名を取得
-   */
-  function getGeometryNameFromPressedKeys() {
-    if (pressedKeys.has('KeyS')) return 'cube';
-    if (pressedKeys.has('KeyD')) return 'cone';
-    if (pressedKeys.has('KeyF')) return 'sphere';
-    if (pressedKeys.has('KeyG')) return 'torus';
-    return 'default';
-  }
-
-  /**
-   * 押されているキーに応じて表示用メッシュのジオメトリを更新
-   */
-  function updateDisplayGeometry() {
-    if (!displayMesh || !geometries) return;
-
-    const nextGeometryName = getGeometryNameFromPressedKeys();
-    const nextGeometry = geometries[nextGeometryName];
-
-    if (nextGeometry && displayMesh.geometry !== nextGeometry) {
-      displayMesh.geometry = nextGeometry;
-      render(performance.now());
-    }
-  }
-
-  function onKeyDown(event) {
-    if (!isPlaying) return;
-
-    const code = event.code;
-    if (code === 'KeyS' || code === 'KeyD' || code === 'KeyF' || code === 'KeyG') {
-      pressedKeys.add(code);
-      updateDisplayGeometry();
-      requestAnimationIfNeeded();
-    }
-  }
-
-  function onKeyUp(event) {
-    if (!isPlaying) return;
-
-    const code = event.code;
-    if (code === 'KeyS' || code === 'KeyD' || code === 'KeyF' || code === 'KeyG') {
-      pressedKeys.delete(code);
-      updateDisplayGeometry();
-      requestAnimationIfNeeded();
-    }
-  }
-
-  function onWindowBlur() {
-    if (pressedKeys.size > 0) {
-      pressedKeys.clear();
-      updateDisplayGeometry();
-      requestAnimationIfNeeded();
-    }
-  }
-
-  /**
-   * キーボードコントロールの状態をリセット（全てのキーを離した状態にする）
-   */
-  function clearKeyboardControlState() {
-    if (pressedKeys.size > 0) {
-      pressedKeys.clear();
-    }
-    updateDisplayGeometry();
-    if (displayMesh) {
-      displayMesh.rotation.set(0, 0, 0);
-    }
-    render(performance.now());
-  }
-
-  /**
-   * アニメーションを続行する必要があるか
-   */
-  function shouldAnimateFrame() {
-    return isPlaying || pressedKeys.size > 0;
-  }
-
-  /**
-   * アニメーションフレームのリクエスト（必要な場合のみ）
-   */
-  function requestAnimationIfNeeded() {
-    if (!animationId) {
-      animationId = requestAnimationFrame(animate);
-    }
-  }
-
-  /**
-   * 表示用メッシュの回転を更新
-   */
-  function updateDisplayRotation(delta) {
-    if (!displayMesh) return;
-
-    if (pressedKeys.size > 0) {
-      const t = delta * 0.001;
-      displayMesh.rotation.x = t * 1.1;
-      displayMesh.rotation.y = t * 1.4;
-      displayMesh.rotation.z = t * 0.9;
-    } else {
-      displayMesh.rotation.set(0, 0, 0);
-    }
-  }
-
-  /**
-   * ゲーム計算用メッシュを作成
-   */
-  function createGameMesh() {
-    const geometry = new THREE.PlaneBufferGeometry(2, 2);
-
-    // ゲーム計算用のuniform変数
-    gameUniforms = {
-      u_gameState : { type : "t", value : renderTarget.texture },
-      u_texsize   : { type : "v2", value : new THREE.Vector2(renderTarget.width, renderTarget.height) }
-    };
-
-    const material = new THREE.ShaderMaterial({
-      uniforms       : gameUniforms,
-      vertexShader   : document.getElementById('vertexShader').textContent,
-      fragmentShader : document.getElementById('gameShader').textContent
+    source.forEach((data, index) => {
+      const lane = index % LANE_COUNT;
+      const laneSlot = Math.floor(index / LANE_COUNT);
+      addTextItem(data, lane, laneSlot, laneLoopLength);
     });
 
-    return new THREE.Mesh(geometry, material);
+    fadingIn = true;
+
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.add('loading--hidden');
+      loading.addEventListener('transitionend', () => loading.remove(), { once: true });
+    }
   }
 
   /**
-   * ゲーム状態を更新（ライフゲーム計算）
+   * 事前生成された静的JSON（GitHub Actionsで定期更新）を取得
    */
-  function updateGameOfLife() {
-    // 永続的なバッファが初期化されているか確認
-    if (!gameStateTexture || !gameStateData || !gameStateNextData) {
-      console.warn('Game state buffers not initialized, skipping update');
-      return;
-    }
-
-    const width = gameStateWidth;
-    const height = gameStateHeight;
-    const data = gameStateData;
-    const next = gameStateNextData;
-
-    // ラップ（周期）読み取り用ヘルパー
-    const getData = (x, y) => {
-      const nx = ((x % width) + width) % width;
-      const ny = ((y % height) + height) % height;
-      return data[(ny * width + nx) * 4] > 128 ? 1 : 0;
-    };
-
-    // 次世代の状態を 'next' バッファに計算する
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        let neighbors = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dy === 0) continue;
-            neighbors += getData(x + dx, y + dy);
-          }
-        }
-
-        const currentCell = getData(x, y);
-        let nextState = 0;
-        if (currentCell === 1) {
-          if (neighbors === 2 || neighbors === 3) nextState = 1;
-        } else {
-          if (neighbors === 3) nextState = 1;
-        }
-
-        const idx = (y * width + x) * 4;
-        next[idx] = nextState * 255;
-        next[idx + 1] = 0;
-        next[idx + 2] = 0;
-        next[idx + 3] = 255;
-      }
-    }
-
-    // 再割り当てを避けるため、currentに上書き
-    gameStateData.set(next);
-    gameStateTexture.needsUpdate = true;
+  async function fetchItems() {
+    const res = await fetch(ITEMS_URL);
+    if (!res.ok) throw new Error(`items fetch failed: ${res.status}`);
+    return res.json();
   }
 
   /**
-   * ゲーム状態を初期化（エッジ検出結果で初期化）
+   * テキストをCanvasにラスタライズしてテクスチャ化し、
+   * 奥行き方向に薄いレイヤーを重ねて3Dの厚み（マットな質感）を持つグループを追加。
+   * 各テキストは固定のレーン（x）に整列させつつ、間隔・位置・速度に個別の揺らぎを持たせ、
+   * 不定期でまばらに上へ流れるようにする（向きは揃えて回転させない）。
    */
-  function initializeGameState() {
-    
-    // Canvas上でエッジ検出を実行
+  function addTextItem(data, lane, laneSlot, laneLoopLength) {
     const canvas = document.createElement('canvas');
-    canvas.width = texture.image.width;
-    canvas.height = texture.image.height;
     const ctx = canvas.getContext('2d');
-    
-    // 画像を描画
-    ctx.drawImage(texture.image, 0, 0);
-    
-    // 画像データを取得
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    // Sobelフィルターでエッジ検出
-    const width = canvas.width;
-    const height = canvas.height;
-    const edgeData = new Uint8Array(width * height * 4);
-    
-    for (let y = 1; y < height - 1; y++) {
-      for (let x = 1; x < width - 1; x++) {
-        // 周辺ピクセルのグレースケール値を取得
-        const getGray = (dx, dy) => {
-          const idx = ((y + dy) * width + (x + dx)) * 4;
-          return (data[idx] + data[idx + 1] + data[idx + 2]) / 3 / 255;
-        };
-        
-        // Sobelフィルター
-        const sobelX = 
-          -getGray(-1, -1) - 2 * getGray(-1, 0) - getGray(-1, 1) +
-          getGray(1, -1) + 2 * getGray(1, 0) + getGray(1, 1);
-        
-        const sobelY =
-          -getGray(-1, -1) - 2 * getGray(0, -1) - getGray(1, -1) +
-          getGray(-1, 1) + 2 * getGray(0, 1) + getGray(1, 1);
-        
-        const edge = Math.sqrt(sobelX * sobelX + sobelY * sobelY);
-        const isEdge = edge > 0.1 ? 255 : 0;
-        
-        const idx = (y * width + x) * 4;
-        edgeData[idx] = isEdge;
-        edgeData[idx + 1] = 0;
-        edgeData[idx + 2] = 0;
-        edgeData[idx + 3] = 255;
-      }
-    }
-    
-    // サンプリング：cellSizeごとにダウンサンプリング
-    const cellSize = 8;
-    const rtWidth = Math.floor(width / cellSize);
-    const rtHeight = Math.floor(height / cellSize);
-    const downSampledData = new Uint8Array(rtWidth * rtHeight * 4);
-    
-    for (let y = 0; y < rtHeight; y++) {
-      for (let x = 0; x < rtWidth; x++) {
-        // セルの中心をサンプリング
-        const srcX = Math.floor((x + 0.5) * cellSize);
-        const srcY = Math.floor((y + 0.5) * cellSize);
-        const srcIdx = (srcY * width + srcX) * 4;
-        const dstIdx = (y * rtWidth + x) * 4;
-        
-        downSampledData[dstIdx] = edgeData[srcIdx];
-        downSampledData[dstIdx + 1] = 0;
-        downSampledData[dstIdx + 2] = 0;
-        downSampledData[dstIdx + 3] = 255;
-      }
-    }
-    
-    // テクスチャを作成
-    // 各更新で再割り当てしないよう、永続的な DataTexture とバッファを作成
-    gameStateWidth = rtWidth;
-    gameStateHeight = rtHeight;
-    gameStateData = downSampledData;
-    gameStateNextData = new Uint8Array(rtWidth * rtHeight * 4);
+    const sizeMultiplier = 1 + Math.random() * (FONT_SIZE_MAX_MULTIPLIER - 1);
+    const fontSize = Math.round(64 * sizeMultiplier);
+    const font = `900 ${fontSize}px "Noto Sans JP", sans-serif`;
+    ctx.font = font;
+    const textWidth = ctx.measureText(data.text).width;
 
-    gameStateTexture = new THREE.DataTexture(
-      gameStateData,
-      rtWidth,
-      rtHeight,
-      THREE.RGBAFormat,
-      THREE.UnsignedByteType
-    );
-    gameStateTexture.minFilter = THREE.NearestFilter;
-    gameStateTexture.magFilter = THREE.NearestFilter;
-    gameStateTexture.needsUpdate = true;
-    
-    // renderTarget と uniforms を更新
-    renderTarget.texture = gameStateTexture;
-    gameUniforms.u_gameState.value = gameStateTexture;
-    uniforms.u_gameState.value = gameStateTexture;
+    canvas.width = Math.ceil(textWidth + fontSize * 2);
+    canvas.height = fontSize * 2;
+
+    ctx.font = font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+
+    // 3D空間での複数レイヤー重ねはZファイティングによるちらつきの原因になるため、
+    // 厚み（マットな立体感）は2Dキャンバス上にオフセットした影のストロークを
+    // 焼き込むことで表現する（3Dメッシュは1枚のみ）。
+    const bevelSteps = 5;
+    const bevelOffset = fontSize * 0.02;
+    for (let i = bevelSteps; i >= 1; i--) {
+      const shade = Math.round(255 * (1 - (i / bevelSteps) * 0.35));
+      ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+      ctx.fillText(
+        data.text,
+        canvas.width / 2 + i * bevelOffset * 0.4,
+        canvas.height / 2 + i * bevelOffset
+      );
+    }
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = fontSize * 0.08;
+    ctx.strokeText(data.text, canvas.width / 2, canvas.height / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(data.text, canvas.width / 2, canvas.height / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+
+    const aspect = canvas.width / canvas.height;
+    const planeHeight = 1.1 * sizeMultiplier;
+    const geometry = new THREE.PlaneBufferGeometry(planeHeight * aspect, planeHeight);
+
+    const group = new THREE.Group();
+    const material = new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.85,
+      metalness: 0.05,
+      alphaTest: 0.5,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+    });
+    const layer = new THREE.Mesh(geometry, material);
+    group.add(layer);
+
+    const laneX = LANE_COUNT > 1
+      ? (lane / (LANE_COUNT - 1) - 0.5) * FLOW_X_RANGE * 2 + (Math.random() - 0.5) * LANE_X_JITTER
+      : 0;
+    const gapJitter = (Math.random() - 0.5) * ITEM_GAP_JITTER;
+    const baseY = FLOW_BOTTOM - laneSlot * ITEM_GAP + gapJitter;
+    const speed = FLOW_BASE_SPEED * (1 + (Math.random() - 0.5) * SPEED_JITTER);
+    // 初回表示時に下から順に出現するのを避けるため、Y軸のどこかにランダムに開始位置をずらす
+    let startY = baseY + Math.random() * laneLoopLength;
+    while (startY > FLOW_TOP) startY -= laneLoopLength;
+
+    const itemZ = FLOW_Z + (Math.random() - 0.5) * ITEM_Z_JITTER;
+
+    group.userData = { url: data.url, text: data.text, laneLoopLength, speed, material };
+    group.position.set(laneX, startY, itemZ);
+    group.rotation.set(0, 0, 0);
+
+    scene.add(group);
+    items.push(group);
+  }
+
+  /**
+   * Fisher-Yatesシャッフル
+   */
+  function shuffle(array) {
+    const result = array.slice();
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
   }
 
   /**
    * 画面のリサイズ
    */
-  function onWindowResize(event) {
-    // リサイズ
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    // uniform変数の位置情報を更新
-    uniforms.u_resolution.value.x = renderer.domElement.width;
-    uniforms.u_resolution.value.y = renderer.domElement.height;
-    // リサイズ後に描画
-    render(performance.now());
+  function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
   /**
-   * マウスポインタ一の取得(画面左下が原点)
+   * マウス／タッチ座標を正規化デバイス座標(-1〜1)で保持
    */
   function onPointerMove(event) {
-    // uniform変数のマウスポインタ情報を更新
-    const ratio = window.innerHeight / window.innerWidth;
-    uniforms.u_mouse.value.x = (event.pageX - window.innerWidth / 2) / window.innerWidth / ratio;
-    uniforms.u_mouse.value.y = (event.pageY - window.innerHeight / 2) / window.innerHeight * -1;
+    targetPointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+    targetPointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
   }
 
   /**
-   * アニメーション
+   * テキストをクリックしたら対応するページへ遷移
    */
-  function animate(delta) {
-    animationId = undefined;
-    render(delta);
-
-    if (shouldAnimateFrame()) {
-      requestAnimationIfNeeded();
+  function onClick() {
+    if (hovered) {
+      window.open(hovered.userData.url, '_blank', 'noopener,noreferrer');
     }
   }
 
   /**
-   * 描画
+   * ホバー中のテキストを判定してカーソル・見た目を更新
    */
-  function render(delta) {
-    uniforms.u_time.value = delta;
-    updateDisplayRotation(delta);
-    renderer.render( scene, camera );
+  function updateHover() {
+    raycaster.setFromCamera(pointer, camera);
+    const intersections = raycaster.intersectObjects(items, true);
+    const next = intersections.length > 0 ? intersections[0].object.parent : null;
+
+    if (next !== hovered) {
+      if (hovered) {
+        hovered.scale.set(1, 1, 1);
+        hovered.userData.material.color.set(0xffffff);
+      }
+      hovered = next;
+      if (hovered) {
+        hovered.scale.set(1.15, 1.15, 1.15);
+        hovered.userData.material.color.set(0x333333);
+      }
+      container.style.cursor = hovered ? 'pointer' : 'crosshair';
+    }
   }
 
-  // MESSAGE
-  (function(_0x1b2c){console.log(decodeURIComponent(escape(atob(_0x1b2c))))})("SGl0IFBMQVkgdG8gc3RhcnQgdGhlIFZKIHNob3chISBIb2xkIHRoZXNlIGtleXMgdG8gdHJpZ2dlciBnZW9tZXRyaWVzOltTXSBDdWJlIHwgW0RdIENvbmUgfCBbRl0gU3BoZXJlIHwgW0ddIFRvcnVzIChEb251dCkgRW5qb3khISDwn5mD");
+  /**
+   * テキストを同一方向へ下から上へ流す。向きは揃えたまま（回転させない）。
+   * 各テキストは自分のレーン（x）と個別の速度・間隔の揺らぎを保ち、
+   * 画面上を抜けたら自分のレーン内でループするので、不定期でまばらな流れに見える。
+   */
+  function updateFlow(delta) {
+    items.forEach((group) => {
+      group.position.y += group.userData.speed * delta;
+
+      if (group.position.y > FLOW_TOP) {
+        group.position.y -= group.userData.laneLoopLength;
+      }
+    });
+  }
+
+  /**
+   * ローディング完了直後、テキストを一気に表示せずフェードインさせる
+   */
+  function updateFadeIn(delta) {
+    if (!fadingIn) return;
+
+    fadeInElapsed = Math.min(fadeInElapsed + delta, FADE_IN_DURATION);
+    const opacity = fadeInElapsed / FADE_IN_DURATION;
+
+    items.forEach((group) => {
+      group.userData.material.opacity = opacity;
+    });
+
+    if (fadeInElapsed >= FADE_IN_DURATION) {
+      fadingIn = false;
+    }
+  }
+
+  /**
+   * 描画・アニメーション
+   */
+  function animate(now) {
+    requestAnimationFrame(animate);
+
+    const time = now * 0.001;
+    const delta = lastTime ? Math.min(time - lastTime, 0.1) : 0;
+    lastTime = time;
+
+    pointer.lerp(targetPointer, 0.08);
+
+    camera.position.x = pointer.x * 3;
+    camera.position.y = pointer.y * 3;
+    camera.lookAt(0, 0, 0);
+
+    updateFlow(delta);
+    updateFadeIn(delta);
+    updateHover();
+
+    renderer.render(scene, camera);
+  }
 
 };
