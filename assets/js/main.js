@@ -288,10 +288,6 @@ async function init() {
     const pulseScale = 1.0 + (maxScale - 1.0) * (0.5 + 0.5 * Math.sin(time * Math.PI * 2 / 1.2));
     rayLine.scale.set(pulseScale, 1, pulseScale);
 
-    if (Math.random() < 0.01) {
-      console.log('Loading:', isLoading, 'Scale:', pulseScale.toFixed(2), 'Time:', time.toFixed(2));
-    }
-
     rayLine.renderOrder = 999;
     scene.add(rayLine);
 
