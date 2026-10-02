@@ -58,7 +58,6 @@ html, body {
     color: #fff;
     font-size: 15px;
     font-weight: bold;
-
 }
 .links__item {
     margin-bottom: 18px;
@@ -69,12 +68,16 @@ html, body {
     color: #000;
     background-color: #fff;
     display: inline-block;
+    text-decoration: none;
+    &:hover {
+        text-decoration: underline;
+    }
 }
 
 .loading {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    display: flex;
+    display: none;  /* スピナーを非表示に */
     align-items: center;
     justify-content: center;
     z-index: 10;
