@@ -1,0 +1,11 @@
+{
+  "name": "tohfu-tronica",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "fetch-items": "node scripts/fetch-items.mjs"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

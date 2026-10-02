@@ -1,366 +1,457 @@
 [
   {
     "text": "8hours",
+    "textEn": "8 hours",
     "url": "https://github.com/TOHFU/8hours"
   },
   {
     "text": "8hours_lp",
+    "textEn": "8hours_lp",
     "url": "https://github.com/TOHFU/8hours_lp"
   },
   {
     "text": "a11y-reserch-skill",
+    "textEn": "a11y-research-skill",
     "url": "https://github.com/TOHFU/a11y-reserch-skill"
   },
   {
     "text": "bibliopegy-vtl",
+    "textEn": "bibliopegy-vtl",
     "url": "https://github.com/TOHFU/bibliopegy-vtl"
   },
   {
     "text": "bookskyblueblue",
+    "textEn": "bookskyblueblue",
     "url": "https://github.com/TOHFU/bookskyblueblue"
   },
   {
     "text": "contact-form",
+    "textEn": "contact-form",
     "url": "https://github.com/TOHFU/contact-form"
   },
   {
     "text": "DOUBUTSUSHOGI",
+    "textEn": "ANIMAL CHESS",
     "url": "https://github.com/TOHFU/DOUBUTSUSHOGI"
   },
   {
     "text": "dubstation",
+    "textEn": "dubstation",
     "url": "https://github.com/TOHFU/dubstation"
   },
   {
     "text": "electron-webview-vj",
+    "textEn": "electron-webview-vj",
     "url": "https://github.com/TOHFU/electron-webview-vj"
   },
   {
     "text": "fufufufufu",
+    "textEn": "fufufufufu",
     "url": "https://github.com/TOHFU/fufufufufu"
   },
   {
     "text": "glsl-demo",
+    "textEn": "glsl-demo",
     "url": "https://github.com/TOHFU/glsl-demo"
   },
   {
     "text": "glsl-sandbox",
+    "textEn": "glsl-sandbox",
     "url": "https://github.com/TOHFU/glsl-sandbox"
   },
   {
     "text": "home-lighting",
+    "textEn": "home-lighting",
     "url": "https://github.com/TOHFU/home-lighting"
   },
   {
     "text": "hon-wo-tsumu",
+    "textEn": "hon-wo-tsumu",
     "url": "https://github.com/TOHFU/hon-wo-tsumu"
   },
   {
     "text": "lenticular",
+    "textEn": "lenticular",
     "url": "https://github.com/TOHFU/lenticular"
   },
   {
     "text": "samesamepanic",
+    "textEn": "samesamepanic",
     "url": "https://github.com/TOHFU/samesamepanic"
   },
   {
     "text": "tatnkapic",
+    "textEn": "tatnkapic",
     "url": "https://github.com/TOHFU/tatnkapic"
   },
   {
     "text": "tohfu.github.io",
+    "textEn": "tohfu.github.io",
     "url": "https://github.com/TOHFU/tohfu.github.io"
   },
   {
     "text": "tohfu_tronica",
+    "textEn": "tohfu_tronica",
     "url": "https://github.com/TOHFU/tohfu_tronica"
   },
   {
     "text": "tohfu_vj",
+    "textEn": "tohfu_vj",
     "url": "https://github.com/TOHFU/tohfu_vj"
   },
   {
     "text": "ux-huristic-research-skill",
+    "textEn": "ux-heuristic-research-skill",
     "url": "https://github.com/TOHFU/ux-huristic-research-skill"
   },
   {
     "text": "AIに対しても「使いやすい」Webを目指す：/llms.txtとai.txtとJSON-LDの規格と使い分けについて",
+    "textEn": "Aiming for a \"User-Friendly\" Web Even for AI: Understanding the /llms.txt, ai.txt, and JSON-LD Standards and How to Use Them Appropriately",
     "url": "https://note.com/tohfu_tronica/n/n999c892c7b7d"
   },
   {
     "text": "ユーザーの感情を体験に反映する：Emotional Aware UI（感情認知型UI）について",
+    "textEn": "Reflecting User Emotions in the User Experience: An Overview of Emotional Aware UI",
     "url": "https://note.com/tohfu_tronica/n/na40d58f396d6"
   },
   {
     "text": "デザインの意図と文脈をAIに正しく伝える：デザインハーネスとして機能するDesignADRについて、DESIGN.mdとの使い分けも含めてまとめました",
+    "textEn": "Accurately Communicating Design Intent and Context to AI: Here’s a summary of DesignADR—which functions as a “design harness”—including how it differs from DESIGN.md",
     "url": "https://note.com/tohfu_tronica/n/n46a8d360912a"
   },
   {
     "text": "アクセシビリティツリーの仕様とアクセシビリティAPI、各OS/ブラウザの支援技術との連携について",
+    "textEn": "Specifications for the Accessibility Tree, the Accessibility API, and Integration with Assistive Technologies on Various Operating Systems and Browsers",
     "url": "https://note.com/tohfu_tronica/n/n2109f0d80eb2"
   },
   {
     "text": "WCAG 3.0 の最新草案を読み解き、アクセシビリティ改善のためのAI活用について考えてみる",
+    "textEn": "Analyzing the Latest Draft of WCAG 3.0 and Exploring the Use of AI to Improve Accessibility",
     "url": "https://note.com/tohfu_tronica/n/n702728863674"
   },
   {
     "text": "文化に溶け込むUI：海外の政府・民間企業のデザインシステム事例と、その特徴を紹介します",
+    "textEn": "UI That Blends into the Culture: A Look at Design System Examples from Government and Private-Sector Organizations Abroad and Their Key Features",
     "url": "https://note.com/tohfu_tronica/n/n231065d96325"
   },
   {
     "text": "lang属性\"fr-CA\"ってどういうこと？という驚きが、あらためてlang属性の意味を考えるきっかけになりました",
+    "textEn": "My surprise at the \"fr-CA\" lang attribute prompted me to take another look at what the lang attribute actually means.",
     "url": "https://note.com/tohfu_tronica/n/nafef704e659b"
   },
   {
     "text": "あのUIどんな名前だったっけ？を無くす、UIコンポーネントの標準化を進めている「Open UI」を紹介します",
+    "textEn": "Introducing “Open UI,” a project that’s standardizing UI components to eliminate the frustration of wondering, “What was that UI called again?”",
     "url": "https://note.com/tohfu_tronica/n/n6a6dee06c440"
   },
   {
     "text": "WCAG 3.0 草案が公開されたので、2.2との違いを解説します：アクセシビリティ評価はどう変わるのか",
+    "textEn": "Now that the WCAG 3.0 draft has been released, I’ll explain the differences from version 2.2: How will accessibility evaluation change?",
     "url": "https://note.com/tohfu_tronica/n/nc02e71f59e98"
   },
   {
     "text": "アクセシビリティとSEOのためのAltテキストの書き方と実践例（和訳解説）",
+    "textEn": "How to Write Alt Text for Accessibility and SEO: Practical Examples (Japanese Translation with Explanations)",
     "url": "https://note.com/tohfu_tronica/n/n7cf0bc42f6ce"
   },
   {
     "text": "UIデザインで「鮮やかなピンク」を使うとアクセシビリティチェックで不適合となる理由を解説します",
+    "textEn": "Here's why using \"vibrant pink\" in UI design results in a failure on accessibility checks.",
     "url": "https://note.com/tohfu_tronica/n/nc7aa50c75ce1"
   },
   {
     "text": "Gitで管理されたファイルをローカル変更しつつ、コミット対象としない方法",
+    "textEn": "How to Make Local Changes to Git-Managed Files Without Committing Them",
     "url": "https://note.com/tohfu_tronica/n/ne841fc5ca9b6"
   },
   {
     "text": "サードパーティCookie規制後の広告テクノロジーの現状を調べてみました：最新のWeb計測とファーストパーティデータ活用",
+    "textEn": "We took a look at the current state of advertising technology following the third-party cookie restrictions: The latest in web analytics and the use of first-party data",
     "url": "https://note.com/tohfu_tronica/n/n969e0d426365"
   },
   {
     "text": "Tailwind CSS v4で構築する、プロダクションレベルのデザインシステムとデザイントークン運用",
+    "textEn": "Building a Production-Grade Design System and Managing Design Tokens with Tailwind CSS v4",
     "url": "https://note.com/tohfu_tronica/n/nf9e89b9a6483"
   },
   {
     "text": "デザイントークンが当たり前になったいま、あらためて振り返る、Material Designの進化",
+    "textEn": "Now That Design Tokens Have Become the Norm, Let’s Take a Fresh Look at the Evolution of Material Design",
     "url": "https://note.com/tohfu_tronica/n/nafc961fc5b7c"
   },
   {
     "text": "認知負荷を減らすWebアクセシビリティ：prefers-reduced-motionの解説と効果的な実装プラクティスを紹介します",
+    "textEn": "Web Accessibility to Reduce Cognitive Load: An Explanation of `prefers-reduced-motion` and Effective Implementation Practices",
     "url": "https://note.com/tohfu_tronica/n/nf804629ad912"
   },
   {
     "text": "アメリカでWebアクセシビリティ義務化の期限が1年延期へ：デジタル機会均等の後退に懸念の声",
+    "textEn": "Deadline for Mandatory Web Accessibility in the U.S. Postponed by One Year: Concerns Raised Over Setback for Digital Equality",
     "url": "https://note.com/tohfu_tronica/n/nc5eff9a011e4"
   },
   {
     "text": "CSSでコントラスト比を自動計算するcontrast-color() が全ブラウザで利用可能になりました",
+    "textEn": "The `contrast-color()` property, which automatically calculates the contrast ratio using CSS, is now available in all browsers.",
     "url": "https://note.com/tohfu_tronica/n/n2a814ac751d8"
   },
   {
     "text": "UX・画面設計に効果的な人間工学の法則を5つ紹介します",
+    "textEn": "Here are 5 ergonomic principles that are effective for UX and screen design",
     "url": "https://note.com/tohfu_tronica/n/na249776787ad"
   },
   {
     "text": "Deque Systemsの最新レポートから読み解く、AI開発とアクセシビリティ",
+    "textEn": "AI Development and Accessibility: Insights from Deque Systems' Latest Report",
     "url": "https://note.com/tohfu_tronica/n/n72a0ddc932f2"
   },
   {
     "text": "UXライティングを行うときに押さえておきたい規格・原則",
+    "textEn": "Standards and Principles to Keep in Mind When Writing UX Copy",
     "url": "https://note.com/tohfu_tronica/n/nf8e38bdaafda"
   },
   {
     "text": "WebAIMによるアクセシビリティレポート「The WebAIM Million」を読み解く",
+    "textEn": "Understanding WebAIM's Accessibility Report, \"The WebAIM Million\"",
     "url": "https://note.com/tohfu_tronica/n/n6263a555da6c"
   },
   {
     "text": "ウェブアクセシビリティ方針を掲示しているウェブサイト集",
+    "textEn": "A Collection of Websites That Have Posted Their Web Accessibility Policies",
     "url": "https://note.com/tohfu_tronica/n/nc824916f6fbb"
   },
   {
     "text": "UXリサーチ：Webサイトをヒューリスティック分析するSKILLを公開しました",
+    "textEn": "UX Research: We've Released \"SKILL\" for Heuristic Analysis of Websites",
     "url": "https://note.com/tohfu_tronica/n/ndfe832faaf28"
   },
   {
     "text": "Web Componentsの概要とライフサイクルについて",
+    "textEn": "An Overview of Web Components and Their Lifecycle",
     "url": "https://note.com/tohfu_tronica/n/nd2bf88aa60d1"
   },
   {
     "text": "ループエンジニアリングで人間中心設計プロセスを回す 実験その３：ヒューリスティック分析を自動化する",
+    "textEn": "Running a Human-Centered Design Process Using Loop Engineering: Experiment 3—Automating Heuristic Analysis",
     "url": "https://note.com/tohfu_tronica/n/n3e25bd58a653"
   },
   {
     "text": "W3Cの注目すべきコミュニティグループ",
+    "textEn": "Notable W3C Community Groups",
     "url": "https://note.com/tohfu_tronica/n/n9fe95a912f47"
   },
   {
     "text": "ループエンジニアリングで人間中心設計プロセスを回す 実験その２：UXのスキルを設計する",
+    "textEn": "Running a Human-Centered Design Process Using Loop Engineering: Experiment #2—Designing UX Skills",
     "url": "https://note.com/tohfu_tronica/n/n25b22568571c"
   },
   {
     "text": "ループエンジニアリングで人間中心設計プロセスを回す 実験その１：ループの設計",
+    "textEn": "Running a Human-Centered Design Process Using Loop Engineering: Experiment 1—Designing the Loop",
     "url": "https://note.com/tohfu_tronica/n/n144b6923a954"
   },
   {
     "text": "Cursorで簡易的にループエンジニアリングを回して既存プロジェクトのリファクタをしてみる。",
+    "textEn": "I'll use Cursor to run a simple loop engineering process and try refactoring an existing project.",
     "url": "https://note.com/tohfu_tronica/n/n8fa13faba224"
   },
   {
     "text": "テキストインプットのUXを改善する：ユースケースに合った入力完了イベントを利用して、使いやすいUIを目指す",
+    "textEn": "Improving the UX of Text Input: Using Input Completion Events Tailored to Specific Use Cases to Create a User-Friendly UI",
     "url": "https://note.com/tohfu_tronica/n/n640a74f7e6cb"
   },
   {
     "text": "ポモドーロ・テクニックによる作業時間効率化のため、macOSアプリ8hoursを作りました",
+    "textEn": "I created the macOS app \"8hours\" to help users optimize their work time using the Pomodoro Technique.",
     "url": "https://note.com/tohfu_tronica/n/n56ee2b700663"
   },
   {
     "text": "Webでよく使われるフォントをひたすら比較する記事です。",
+    "textEn": "This article is all about comparing fonts commonly used on the web.",
     "url": "https://note.com/tohfu_tronica/n/ne3fe187b3d9e"
   },
   {
     "text": "WebエンジニアがJIS文字コードの規格とその経緯を理解する",
+    "textEn": "Web Engineers Understand JIS Character Encoding Standards and Their History",
     "url": "https://note.com/tohfu_tronica/n/nee982f35ea67"
   },
   {
     "text": "GoogleのWebパフォーマンス測定ツールは結局何を使えばいいの？仕組みとその関連用語を整理する",
+    "textEn": "Which Google Web Performance Measurement Tool Should You Use? A Guide to How They Work and Related Terminology",
     "url": "https://note.com/tohfu_tronica/n/nb50e0a6fafb6"
   },
   {
     "text": "Googleのパフォーマンス指標Core Web Vitalsに新しく追加されたINP(Interaction to Next Paint)について",
+    "textEn": "About INP (Interaction to Next Paint), a New Addition to Google's Core Web Vitals Performance Metrics",
     "url": "https://note.com/tohfu_tronica/n/naf994c65cb59"
   },
   {
     "text": "開発ドリブンのUX改善：データ取得ライブラリ「SWR」という思想をデザイナーが知るべき理由",
+    "textEn": "Development-Driven UX Improvement: Why Designers Should Understand the Philosophy Behind the \"SWR\" Data Retrieval Library",
     "url": "https://note.com/tohfu_tronica/n/n43e8eadc6703"
   },
   {
     "text": "５つのUI状態（The Five UI States）＋実装観点で考慮したいステートについて",
+    "textEn": "The Five UI States + States to Consider from an Implementation Perspective",
     "url": "https://note.com/tohfu_tronica/n/n1d1f9e5e3fdd"
   },
   {
     "text": "GoogleのAI向け最新Web開発スキルModern Web Guidanceについて",
+    "textEn": "About \"Modern Web Guidance,\" Google's Latest Web Development Skills for AI",
     "url": "https://note.com/tohfu_tronica/n/n16613881bb64"
   },
   {
     "text": "ブラウザサポートの新しい基準「Baseline」について",
+    "textEn": "About \"Baseline,\" the New Standard for Browser Support",
     "url": "https://note.com/tohfu_tronica/n/ne98e5d245059"
   },
   {
     "text": "アクセシビリティ関連WEBサイトリンク",
+    "textEn": "Links to Websites Related to Accessibility",
     "url": "https://note.com/tohfu_tronica/n/n073737ad82ca"
   },
   {
     "text": "WAI-ARIAの活用について（基本編）",
+    "textEn": "Using WAI-ARIA (Basics)",
     "url": "https://note.com/tohfu_tronica/n/n528d352970ef"
   },
   {
     "text": "WCAG3.0で採択されるかもしれないコントラスト比計算法（APCA）について",
+    "textEn": "About the Contrast Ratio Calculation Method (APCA) That May Be Adopted in WCAG 3.0",
     "url": "https://note.com/tohfu_tronica/n/nd299a3b40329"
   },
   {
     "text": "AI駆動開発で月に2個目のWEBアプリを作りました（青空文庫ビューアーBook Sky, Blue Blueをリリースしました）",
+    "textEn": "I Built My Second Web App This Month Using AI-Driven Development (Released the Aozora Bunko Viewer \"Book Sky\" and \"Blue Blue\")",
     "url": "https://note.com/tohfu_tronica/n/n6fd43b9b6ae3"
   },
   {
     "text": "WEBアクセシビリティのコントラスト比をちゃんと理解する",
+    "textEn": "Understanding Web Accessibility Contrast Ratios Properly",
     "url": "https://note.com/tohfu_tronica/n/nffe6197bea3d"
   },
   {
     "text": "AI駆動開発でWebアプリをリリースしてみた（短歌画像生成アプリTANKAPICをつくりました）",
+    "textEn": "I Tried Releasing a Web App Using AI-Driven Development (I Built TANKAPIC, a Tanka Image Generation App)",
     "url": "https://note.com/tohfu_tronica/n/nd12d76161c3b"
   },
   {
     "text": "W3Cのデザイントークンを読み解いてみる（仕様編③リゾルバー・モジュール）",
+    "textEn": "A Closer Look at W3C Design Tokens (Specification Part 3: Resolver Module)",
     "url": "https://note.com/tohfu_tronica/n/n451ddc3cca79"
   },
   {
     "text": "W3Cのデザイントークンを読み解いてみる（仕様編②カラー・モジュール）",
+    "textEn": "A Closer Look at W3C Design Tokens (Specification Part 2: Color Module)",
     "url": "https://note.com/tohfu_tronica/n/ne3b4c23fa33f"
   },
   {
     "text": "W3Cのデザイントークンを読み解いてみる（仕様編①フォーマット・モジュール）",
+    "textEn": "A Closer Look at W3C Design Tokens (Specification Part 1: Format Module)",
     "url": "https://note.com/tohfu_tronica/n/n483af084682b"
   },
   {
     "text": "OKLCHカラースペースについて",
+    "textEn": "About the OKLCH Color Space",
     "url": "https://note.com/tohfu_tronica/n/n294136f7ad70"
   },
   {
     "text": "W3Cのデザイントークンを読み解いてみる",
+    "textEn": "A Closer Look at W3C Design Tokens",
     "url": "https://note.com/tohfu_tronica/n/n618af7cac906"
   },
   {
     "text": "AWS 混同しそうなサービスまとめ",
+    "textEn": "A Summary of AWS Services That Are Easy to Confuse",
     "url": "https://note.com/tohfu_tronica/n/nd2bf17f58a3c"
   },
   {
     "text": "AWS S3のストレージクラスについて",
+    "textEn": "About AWS S3 Storage Classes",
     "url": "https://note.com/tohfu_tronica/n/n8e0fd77d8185"
   },
   {
     "text": "UXの5階層モデルについて：WEBデザインと照らしてみる",
+    "textEn": "The Five-Layer Model of UX: A Comparison with Web Design",
     "url": "https://note.com/tohfu_tronica/n/n66d28400d63d"
   },
   {
     "text": "HCDプロセスにおける調査方法まとめ",
+    "textEn": "Summary of Research Methods in the HCD Process",
     "url": "https://note.com/tohfu_tronica/n/n2bb0bcb0672f"
   },
   {
     "text": "ユーザビリティに関する定義・規格",
+    "textEn": "Definitions and Standards Related to Usability",
     "url": "https://note.com/tohfu_tronica/n/n1cacec2b2b98"
   },
   {
     "text": "GLSLを使ったWeb表現",
+    "textEn": "Web Graphics Using GLSL",
     "url": "https://note.com/tohfu_tronica/n/n528d2a0e631f"
   },
   {
     "text": "人間中心設計の関連規格について",
+    "textEn": "About Standards Related to Human-Centered Design",
     "url": "https://note.com/tohfu_tronica/n/n605b1c888448"
   },
   {
     "text": "UXについて「UXグロースモデル - アフターデジタルを生き抜く実践方法論」を読んで",
+    "textEn": "After reading “The UX Growth Model: A Practical Methodology for Thriving in the Post-Digital Era” on UX",
     "url": "https://note.com/tohfu_tronica/n/n997a1535f88c"
   },
   {
     "text": "AWS サポートプランについて",
+    "textEn": "About AWS Support Plans",
     "url": "https://note.com/tohfu_tronica/n/n4ab19ac202e4"
   },
   {
     "text": "View Transition API（Cross Document）の挙動を詳しくみてみたかった",
+    "textEn": "I wanted to take a closer look at how the View Transition API (Cross-Document) works.",
     "url": "https://note.com/tohfu_tronica/n/naaef19cbaa9c"
   },
   {
     "text": "AWS IAMについて",
+    "textEn": "About AWS IAM",
     "url": "https://note.com/tohfu_tronica/n/n546574b1fde4"
   },
   {
     "text": "W3Cのアクセシビリティ関連ガイドラインについて",
+    "textEn": "About the W3C's Accessibility Guidelines",
     "url": "https://note.com/tohfu_tronica/n/n953d192ea53f"
   },
   {
     "text": "AWS クラウド導入フレームワーク (AWS CAF)について",
+    "textEn": "About the AWS Cloud Adoption Framework (AWS CAF)",
     "url": "https://note.com/tohfu_tronica/n/n3d89370e1258"
   },
   {
     "text": "ウェブアクセシビリティのガイドラインWCAG2.2について ： 概要",
+    "textEn": "About the Web Content Accessibility Guidelines (WCAG 2.2): Overview",
     "url": "https://note.com/tohfu_tronica/n/n5f1e8dd9f9a1"
   },
   {
     "text": "AWS Well-Architectedフレームワークについて",
+    "textEn": "About the AWS Well-Architected Framework",
     "url": "https://note.com/tohfu_tronica/n/ndf24216068c3"
   },
   {
     "text": "ブラウザの音声自動再生について",
+    "textEn": "About Automatic Audio Playback in Browsers",
     "url": "https://note.com/tohfu_tronica/n/nf4c31c33b24e"
   },
   {
     "text": "AWSのサービス一覧(テクノロジー・概念)",
+    "textEn": "List of AWS Services (Technologies and Concepts)",
     "url": "https://note.com/tohfu_tronica/n/n9d026b956691"
   },
   {
     "text": "「やさしい日本語」の動向",
+    "textEn": "Trends in “Easy Japanese”",
     "url": "https://note.com/tohfu_tronica/n/n0e2cb367cde6"
   },
   {
     "text": "投稿テスト",
+    "textEn": "Test Post",
     "url": "https://note.com/tohfu_tronica/n/n9006a3d81e90"
   }
 ]

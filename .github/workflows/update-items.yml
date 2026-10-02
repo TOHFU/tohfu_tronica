@@ -19,6 +19,7 @@ jobs:
       - run: node scripts/fetch-items.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPL_API_KEY: ${{ secrets.DEEPL_API_KEY }}
       - name: Commit if changed
         run: |
           if [ -n "$(git status --porcelain data/items.json)" ]; then

@@ -3,7 +3,8 @@
 
 html, body {
     margin: 0;
-    font-family: "Noto Sans JP", sans-serif;
+    font-family: "Staatliches", sans-serif;
+    letter-spacing: 0.02em;
 }
 
 #container {
@@ -24,28 +25,28 @@ html, body {
         content: '';
         position: absolute;
         top: 20px; left: 20px; right: 20px; bottom: 20px;
-        border: 1px solid #fff;
+        border: 1px solid #000;
         pointer-events: none;
     }
 }
 
 .title {
-    padding: 1px 10px;
+    padding: 2px 12px;
     position: absolute;
     top: 30px; left: 30px;
     color: #000;
     background-color: #fff;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: bold;
 }
 
 .profile {
-    padding: 1px 10px;
+    padding: 2px 12px;
     position: absolute;
-    top: 48px; left: 30px;
+    top: 58px; left: 30px;
     color: #000;
     background-color: #fff;
-    font-size: 10px;
+    font-size: 12.5px;
     font-weight: bold;
 }
 
@@ -53,17 +54,17 @@ html, body {
     margin: 0;
     padding: 0;
     position: absolute;
-    top: 80px; left: 50px;
+    top: 100px; left: 50px;
     color: #fff;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: bold;
-    
+
 }
 .links__item {
-    margin-bottom: 14px;
+    margin-bottom: 18px;
 }
 .links__item a {
-    padding: 1px 10px;
+    padding: 2px 12px;
     cursor: pointer;
     color: #000;
     background-color: #fff;

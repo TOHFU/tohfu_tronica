@@ -64,6 +64,13 @@ async function init() {
   pointer = new THREE.Vector2(0, 0);
   const targetPointer = new THREE.Vector2(0, 0);
 
+  // ランダムなカメラオフセット（2秒ごとに変化）
+  const randomOffset = new THREE.Vector2(0, 0);
+  const targetRandomOffset = new THREE.Vector2(0, 0);
+  let randomChangeTimer = 0;
+  const RANDOM_CHANGE_INTERVAL = 2.0; // 秒
+  const RANDOM_OFFSET_RANGE = 3.0; // ランダムオフセットの範囲
+
   onWindowResize();
   window.addEventListener('resize', onWindowResize, false);
 
@@ -83,6 +90,13 @@ async function init() {
    * データ取得（githubリポジトリ + note記事）、失敗してもフェイルソフト
    */
   async function loadItems() {
+    // Staatlichesフォントの読み込みを待つ
+    try {
+      await document.fonts.load('400 64px "Staatliches"');
+    } catch (e) {
+      console.warn('Font loading failed:', e);
+    }
+
     const fetched = shuffle(await fetchItems().catch(() => []));
     const source = fetched.length > 0 ? fetched : FALLBACK_ITEMS;
 
@@ -124,9 +138,11 @@ async function init() {
     const ctx = canvas.getContext('2d');
     const sizeMultiplier = 1 + Math.random() * (FONT_SIZE_MAX_MULTIPLIER - 1);
     const fontSize = Math.round(64 * sizeMultiplier);
-    const font = `900 ${fontSize}px "Noto Sans JP", sans-serif`;
+    const font = `400 ${fontSize}px "Staatliches", sans-serif`;
     ctx.font = font;
-    const textWidth = ctx.measureText(data.text).width;
+    // デフォルトで英語表示（textEnがなければ元のtextを使用）
+    const displayText = data.textEn || data.text;
+    const textWidth = ctx.measureText(displayText).width;
 
     canvas.width = Math.ceil(textWidth + fontSize * 2);
     canvas.height = fontSize * 2;
@@ -139,23 +155,25 @@ async function init() {
     // 3D空間での複数レイヤー重ねはZファイティングによるちらつきの原因になるため、
     // 厚み（マットな立体感）は2Dキャンバス上にオフセットした影のストロークを
     // 焼き込むことで表現する（3Dメッシュは1枚のみ）。
-    const bevelSteps = 5;
-    const bevelOffset = fontSize * 0.02;
+    const bevelSteps = 8;
+    const bevelOffset = fontSize * 0.015;
+    // Z方向の押し出し枠線（側面）を描画
     for (let i = bevelSteps; i >= 1; i--) {
-      const shade = Math.round(255 * (1 - (i / bevelSteps) * 0.35));
-      ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
-      ctx.fillText(
-        data.text,
-        canvas.width / 2 + i * bevelOffset * 0.4,
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.strokeText(
+        displayText,
+        canvas.width / 2 + i * bevelOffset * 0.5,
         canvas.height / 2 + i * bevelOffset
       );
     }
 
+    // 正面の枠線とテキスト
     ctx.strokeStyle = '#000000';
-    ctx.lineWidth = fontSize * 0.08;
-    ctx.strokeText(data.text, canvas.width / 2, canvas.height / 2);
+    ctx.lineWidth = 1;
+    ctx.strokeText(displayText, canvas.width / 2, canvas.height / 2);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(data.text, canvas.width / 2, canvas.height / 2);
+    ctx.fillText(displayText, canvas.width / 2, canvas.height / 2);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
@@ -175,6 +193,9 @@ async function init() {
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0,
+      emissive: 0xffffff, // 自己発光を有効化
+      emissiveMap: texture, // テクスチャを発光マップとして使用
+      emissiveIntensity: 1.0, // 発光強度（ライティングの影響を受けない純粋な色）
     });
     const layer = new THREE.Mesh(geometry, material);
     group.add(layer);
@@ -182,16 +203,14 @@ async function init() {
     const laneX = LANE_COUNT > 1
       ? (lane / (LANE_COUNT - 1) - 0.5) * FLOW_X_RANGE * 2 + (Math.random() - 0.5) * LANE_X_JITTER
       : 0;
-    const gapJitter = (Math.random() - 0.5) * ITEM_GAP_JITTER;
-    const baseY = FLOW_BOTTOM - laneSlot * ITEM_GAP + gapJitter;
     const speed = FLOW_BASE_SPEED * (1 + (Math.random() - 0.5) * SPEED_JITTER);
-    // 初回表示時に下から順に出現するのを避けるため、Y軸のどこかにランダムに開始位置をずらす
-    let startY = baseY + Math.random() * laneLoopLength;
-    while (startY > FLOW_TOP) startY -= laneLoopLength;
+    // 初回表示時に画面全体（FLOW_BOTTOMからFLOW_TOPまで）にランダムに配置
+    const startY = FLOW_BOTTOM + Math.random() * (FLOW_TOP - FLOW_BOTTOM);
 
     const itemZ = FLOW_Z + (Math.random() - 0.5) * ITEM_Z_JITTER;
 
-    group.userData = { url: data.url, text: data.text, laneLoopLength, speed, material };
+    // アルファ値チェック用にcanvasも含めてuserDataを設定
+    group.userData = { url: data.url, text: data.text, laneLoopLength, speed, material, canvas };
     group.position.set(laneX, startY, itemZ);
     group.rotation.set(0, 0, 0);
 
@@ -241,21 +260,47 @@ async function init() {
 
   /**
    * ホバー中のテキストを判定してカーソル・見た目を更新
+   * UV座標からテクスチャのアルファ値をチェックし、透明部分は当たり判定から除外
    */
   function updateHover() {
     raycaster.setFromCamera(pointer, camera);
     const intersections = raycaster.intersectObjects(items, true);
-    const next = !overLink && intersections.length > 0 ? intersections[0].object.parent : null;
+
+    let next = null;
+    if (!overLink && intersections.length > 0) {
+      // 交差したオブジェクトから、アルファ値が閾値以上の最初のものを探す
+      for (let i = 0; i < intersections.length; i++) {
+        const intersection = intersections[i];
+        const group = intersection.object.parent;
+
+        if (group.userData.canvas && intersection.uv) {
+          const canvas = group.userData.canvas;
+          const ctx = canvas.getContext('2d');
+
+          // UV座標(0-1)をキャンバスのピクセル座標に変換
+          const x = Math.floor(intersection.uv.x * canvas.width);
+          const y = Math.floor((1 - intersection.uv.y) * canvas.height);
+
+          // ピクセルのアルファ値を取得
+          const imageData = ctx.getImageData(x, y, 1, 1);
+          const alpha = imageData.data[3];
+
+          // アルファ値が127以上（約50%以上）なら当たり判定とする
+          if (alpha > 127) {
+            next = group;
+            break;
+          }
+        }
+      }
+    }
 
     if (next !== hovered) {
       if (hovered) {
         hovered.scale.set(1, 1, 1);
-        hovered.userData.material.color.set(0xffffff);
       }
       hovered = next;
       if (hovered) {
         hovered.scale.set(1.15, 1.15, 1.15);
-        hovered.userData.material.color.set(0x333333);
       }
       container.style.cursor = hovered ? 'pointer' : 'crosshair';
     }
@@ -304,11 +349,25 @@ async function init() {
     const delta = lastTime ? Math.min(time - lastTime, 0.1) : 0;
     lastTime = time;
 
+    // 2秒ごとにランダムなカメラオフセットを更新
+    randomChangeTimer += delta;
+    if (randomChangeTimer >= RANDOM_CHANGE_INTERVAL) {
+      randomChangeTimer = 0;
+      targetRandomOffset.set(
+        (Math.random() - 0.5) * RANDOM_OFFSET_RANGE * 2,
+        (Math.random() - 0.5) * RANDOM_OFFSET_RANGE * 2
+      );
+    }
+
+    // ランダムオフセットを滑らかに補間
+    randomOffset.lerp(targetRandomOffset, 1 - Math.exp(-delta / POINTER_FOLLOW_SECONDS));
+
     // フレームレートに依存しない指数平滑化。約0.3秒かけて滑らかに追従する
     pointer.lerp(targetPointer, 1 - Math.exp(-delta / POINTER_FOLLOW_SECONDS));
 
-    camera.position.x = pointer.x * 3;
-    camera.position.y = pointer.y * 3;
+    // マウス追従 + ランダムオフセット
+    camera.position.x = pointer.x * 3 + randomOffset.x;
+    camera.position.y = pointer.y * 3 + randomOffset.y;
     camera.lookAt(0, 0, CAMERA_PIVOT_Z);
 
     updateFlow(delta);
